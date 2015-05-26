@@ -76,3 +76,10 @@ def t_error(t):
 
 # Build the lexer
 lexer = lex.lex()
+
+if __name__ == '__main__':
+    with open('../test/conf/nginx.conf') as f:
+        data = f.read()
+    lexer.input(data)
+    for t in lexer:
+        print(t)
