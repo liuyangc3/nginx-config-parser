@@ -1,0 +1,5 @@
+/.idea
+lextab.py
+/ngx/parser.out
+/ngx/parsetab.py
+*.pyc
