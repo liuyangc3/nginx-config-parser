@@ -49,7 +49,7 @@ class UpstreamGroup(object):
     def __init__(self, ngx_home):
         self.ngx_home = ngx_home
         self.ngx_conf = self.ngx_home + '/conf/nginx.conf'
-        self.us_group = self.get_upstream_group()
+        self.group = self.get_upstream_group()
 
     def get_upstream_conf(self):
         """ 取出关于 upstream 的配置文本 """
@@ -79,7 +79,7 @@ class UpstreamGroup(object):
         us_name = str(us_name)
         try:
             # 对象的副本传递到 Upstream
-            us_obj = deepcopy(self.us_group[us_name])
+            us_obj = deepcopy(self.group[us_name])
             us = Upstream(us_name, us_obj)
             return us
         except KeyError, e:
@@ -92,21 +92,21 @@ class UpstreamGroup(object):
             for server in us.servers:
                 us_obj.append(server)
             self.get_upstream_group()[us.us_name] = us_obj
-            return self.us_group[us.us_name]
+            return self.group[us.us_name]
 
     def del_upstream(self, *args):
         """删除一个或多个指定的 us对象,返回删除后的 upstreams 对象"""
         try:
             for us_name in args:
-                self.us_group.pop(us_name)
-            return self.us_group
+                self.group.pop(us_name)
+            return self.group
         except NotFindUpstream, e:
-            return self.us_group
+            return self.group
 
     def dump_upstreams(self):
         """upstreams对象转为文本"""
         res = []
-        for us_name, us_stmt in self.us_group.items():
+        for us_name, us_stmt in self.group.items():
             res.append("upstream %s {\n" % us_name)
             if us_stmt[0] != 'default':
                 res.append('    ' + us_stmt[0] + ';\n')

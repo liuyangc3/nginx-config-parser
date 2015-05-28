@@ -8,8 +8,6 @@ import os
 from tornado import web
 from ngx import UpstreamGroup, NotFindUpstream, NotFindServer
 
-ngx_home = os.path.join(os.path.dirname(__file__), "../test")
-
 
 def check_ipv4(value):
     parts = value.split('.')
@@ -19,36 +17,39 @@ def check_ipv4(value):
     return False
 
 
-class IndexHandler(web.RequestHandler):
-    def data_received(self, chunk):
-        pass
-
-    def get(self):
-        us_group = UpstreamGroup(ngx_home)
-        if 'pretty' in self.request.arguments:
-            self.write(json.dumps(us_group.us_group, indent=4))
-        else:
-            self.write(json.dumps(us_group.us_group))
-
-
-class UpstreamHandler(web.RequestHandler):
+class BaseHandler(web.RequestHandler):
     def data_received(self, chunk):
         pass
 
     def initialize(self):
-        self.us_group = UpstreamGroup(ngx_home)
-
-    def check_us_name(self, us_name):
-        try:
-            return self.us_group.get_upstream(us_name)
-        except NotFindUpstream, e:
-            self.finish(e.message)
+        self.ngx_home = os.path.join(os.path.dirname(__file__), "../test")
+        self.usgroup = UpstreamGroup(self.ngx_home)
 
     def pretty_response(self, data):
         if 'pretty' in self.request.arguments:
             self.write(json.dumps(data, indent=4))
         else:
             self.write(json.dumps(data))
+
+
+class IndexHandler(BaseHandler):
+    def get(self):
+        self.pretty_response(self.usgroup.group)
+
+
+class ListHandler(BaseHandler):
+    def get(self):
+        self.write("Name:%-25sServers:\n" % '')
+        for us_name in self.usgroup.group:
+            self.write('%-30s%-25d\n' % (us_name, len(self.usgroup.get_upstream(us_name).servers)))
+
+
+class UpstreamHandler(BaseHandler):
+    def check_us_name(self, us_name):
+        try:
+            return self.usgroup.get_upstream(us_name)
+        except NotFindUpstream, e:
+            self.finish(e.message)
 
     def get(self, us_name):
         us = self.check_us_name(us_name)
@@ -62,9 +63,9 @@ class UpstreamHandler(web.RequestHandler):
             if check_ipv4(ip):
                 port = data[0].split(':')[1]
                 us.add_server(ip, port, data[1], data[2])
-                self.us_group.update_upstream_group(us)
-                self.us_group.update_ngx_conf()
-                os.system(ngx_home + '/sbin/nginx -s reload')
+                self.usgroup.update_upstream_group(us)
+                self.usgroup.update_ngx_conf()
+                os.system(self.ngx_home + '/sbin/nginx -s reload')
                 self.pretty_response(us.servers)
             else:
                 self.write("invalid ip address %s" % ip)
@@ -78,9 +79,9 @@ class UpstreamHandler(web.RequestHandler):
             if check_ipv4(ip):
                 try:
                     us.del_server(ip)
-                    self.us_group.update_upstream_group(us)
-                    self.us_group.update_ngx_conf()
-                    os.system(ngx_home + '/sbin/nginx -s reload')
+                    self.usgroup.update_upstream_group(us)
+                    self.usgroup.update_ngx_conf()
+                    os.system(self.ngx_home + '/sbin/nginx -s reload')
                     self.pretty_response(us.servers)
                 except NotFindServer, e:
                     self.write(e.message)

@@ -12,10 +12,11 @@ import logging
 
 define("port", default=8000, help="run on the given port", type=int)
 
-from handlers import IndexHandler, UpstreamHandler
+from handlers import IndexHandler, ListHandler, UpstreamHandler
 
 app = Application(handlers=[
     (r'/', IndexHandler),
+    (r'/list', ListHandler),
     (r'/(\w+)', UpstreamHandler)
 ])
 
