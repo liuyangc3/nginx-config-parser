@@ -42,6 +42,9 @@ class NotFindUpstream(Exception):
 class NotFindServer(NotFindUpstream):
     pass
 
+class ServerExsit(NotFindUpstream):
+    pass
+
 
 class UpstreamGroup(object):
     """
@@ -86,7 +89,7 @@ class UpstreamGroup(object):
         us_name = str(us_name)
         try:
             # 对象的副本传递到 Upstream
-            us_obj = deepcopy(self.group[us_name])
+            us_obj = deepcopy(self.get_upstream_group()[us_name])
             us = Upstream(us_name, us_obj)
             return us
         except KeyError, e:
@@ -139,6 +142,9 @@ class Upstream(object):
 
     def add_server(self, ip, port, max_fails=None, fail_timeout=None):
         """ 添加server对象"""
+        for server in self.servers:
+            if ip in server[0]:
+                raise ServerExsit("%s already in upstream %s" % (ip, self.us_name))
         if not max_fails:
             max_fails = "1"
         if not fail_timeout:
@@ -155,8 +161,7 @@ class Upstream(object):
             if ip in server[0]:
                 self.servers.pop(index)
                 return self.servers
-            else:
-                raise NotFindServer("\"%s\" is not in upstream \"%s\"" % (ip, self.us_name))
+        raise NotFindServer("%s is not in upstream %s" % (ip, self.us_name))
 
 
 if __name__ == '__main__':

@@ -6,7 +6,8 @@ import simplejson as json
 import os
 
 from tornado import web
-from ngx import UpstreamGroup, NotFindUpstream, NotFindServer
+from ngx import UpstreamGroup
+from ngx import NotFindUpstream, NotFindServer, ServerExsit
 import config
 
 
@@ -24,7 +25,7 @@ class BaseHandler(web.RequestHandler):
 
     def initialize(self):
         self.ngx_home = config.ngx_home
-        self.upstream_conf = config.upstream_conf
+        self.usgroup = UpstreamGroup(config.upstream_conf)
 
     def pretty_response(self, data):
         if 'pretty' in self.request.arguments:
@@ -34,17 +35,11 @@ class BaseHandler(web.RequestHandler):
 
 
 class IndexHandler(BaseHandler):
-    def initialize(self):
-        self.usgroup = UpstreamGroup(self.upstream_conf)
-
     def get(self):
         self.pretty_response(self.usgroup.group)
 
 
 class ListHandler(BaseHandler):
-    def initialize(self):
-        self.usgroup = UpstreamGroup(self.upstream_conf)
-
     def get(self):
         self.write("Name:%-25sServers:\n" % '')
         for us_name in self.usgroup.group:
@@ -52,9 +47,6 @@ class ListHandler(BaseHandler):
 
 
 class UpstreamHandler(BaseHandler):
-    def initialize(self):
-        self.usgroup = UpstreamGroup(self.upstream_conf)
-
     def check_us_name(self, us_name):
         try:
             return self.usgroup.get_upstream(us_name)
@@ -75,11 +67,14 @@ class UpstreamHandler(BaseHandler):
             ip = data[0].split(':')[0]
             if check_ipv4(ip):
                 port = data[0].split(':')[1]
-                us.add_server(ip, port, data[1], data[2])
-                self.usgroup.update_upstream_group(us)
-                self.usgroup.update_ngx_conf()
-                os.system(self.ngx_home + '/sbin/nginx -s reload')
-                self.pretty_response(us.servers)
+                try:
+                    us.add_server(ip, port, data[1], data[2])
+                    self.usgroup.update_upstream_group(us)
+                    self.usgroup.update_ngx_conf()
+                    # os.system(self.ngx_home + '/sbin/nginx -s reload')
+                    self.pretty_response(us.servers)
+                except ServerExsit, e:
+                    self.write(e.message)
             else:
                 self.write("invalid ip address %s" % ip)
         else:
@@ -97,7 +92,7 @@ class UpstreamHandler(BaseHandler):
                     us.del_server(ip)
                     self.usgroup.update_upstream_group(us)
                     self.usgroup.update_ngx_conf()
-                    os.system(self.ngx_home + '/sbin/nginx -s reload')
+                    # os.system(self.ngx_home + '/sbin/nginx -s reload')
                     self.pretty_response(us.servers)
                 except NotFindServer, e:
                     self.write(e.message)
