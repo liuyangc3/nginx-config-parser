@@ -71,7 +71,7 @@ class UpstreamHandler(BaseHandler):
                     us.add_server(ip, port, data[1], data[2])
                     self.usgroup.update_upstream_group(us)
                     self.usgroup.update_ngx_conf()
-                    # os.system(self.ngx_home + '/sbin/nginx -s reload')
+                    os.system(self.ngx_home + '/sbin/nginx -s reload')
                     self.pretty_response(us.servers)
                 except ServerExsit, e:
                     self.write(e.message)
@@ -92,7 +92,7 @@ class UpstreamHandler(BaseHandler):
                     us.del_server(ip)
                     self.usgroup.update_upstream_group(us)
                     self.usgroup.update_ngx_conf()
-                    # os.system(self.ngx_home + '/sbin/nginx -s reload')
+                    os.system(self.ngx_home + '/sbin/nginx -s reload')
                     self.pretty_response(us.servers)
                 except NotFindServer, e:
                     self.write(e.message)
