@@ -23,6 +23,7 @@ class BaseHandler(web.RequestHandler):
         pass
 
     def initialize(self):
+        self.ngx_home = config.ngx_home
         self.upstream_conf = config.upstream_conf
         self.usgroup = UpstreamGroup(self.upstream_conf)
 
@@ -57,6 +58,9 @@ class UpstreamHandler(BaseHandler):
         self.pretty_response(us.servers)
 
     def post(self, us_name):
+        """ 增加一个 server 配置
+        curl -XPOST 127.0.0.1:8000/us_name -d '["10.201.10.233:3333", "111", "10s"]'
+        """
         us = self.check_us_name(us_name)
         if us:
             data = json.loads(self.request.body)
@@ -74,6 +78,9 @@ class UpstreamHandler(BaseHandler):
             return
 
     def delete(self, us_name):
+        """ 删除一个 server 配置
+        curl -XPOST 127.0.0.1:8000/us_name -d '10.201.10.233:3333'
+        """
         us = self.check_us_name(us_name)
         if us:
             ip = self.request.body

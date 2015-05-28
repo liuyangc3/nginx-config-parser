@@ -28,6 +28,7 @@ def _parse_server_line(line):
         server.append('10s')  # 加入fail_timeout 默认值
     return server
 
+
 def server_to_line(server):
     """ 根据 server 对象生成文本 """
     return "    server %s max_fails=%s fail_timeout=%s;\n" \
@@ -37,8 +38,10 @@ def server_to_line(server):
 class NotFindUpstream(Exception):
     pass
 
+
 class NotFindServer(NotFindUpstream):
     pass
+
 
 class UpstreamGroup(object):
     """
@@ -95,7 +98,7 @@ class UpstreamGroup(object):
             us_obj = [us.lb_algorithm]
             for server in us.servers:
                 us_obj.append(server)
-            self.get_upstream_group()[us.us_name] = us_obj
+            self.group[us.us_name] = us_obj
             return self.group[us.us_name]
 
     def del_upstream(self, *args):
@@ -121,19 +124,21 @@ class UpstreamGroup(object):
         return ''.join(res)
 
     def update_ngx_conf(self):
-        with open(self.ngx_conf, 'w') as f:
-            f.write(self.dump_upstreams())
-
+        data = self.dump_upstreams()
+        if data:
+            with open(self.ngx_conf, 'w') as f:
+                f.write(data)
 
 class Upstream(object):
     def __init__(self, us_name, us_obj):
         # us_obj = ['lb',[server],[server],...]
         self.us_name = us_name
-        self.lb_algorithm = None if us_obj[0] == 'default' else us_obj.pop(0)
+        self.lb_algorithm = us_obj[0]
+        us_obj.pop(0)
         self.servers = us_obj
 
     def add_server(self, ip, port, max_fails=None, fail_timeout=None):
-        """ 添加server对象,ip是字符串 参数都是数字"""
+        """ 添加server对象"""
         if not max_fails:
             max_fails = "1"
         if not fail_timeout:
@@ -155,37 +160,8 @@ class Upstream(object):
 
 
 if __name__ == '__main__':
-    pass
-    # string = 'server 10.10.10.10:8000 max_fails=11 fail_timeout=310s;'
-    # str2 = 'server 10.10.10.10:8000;'
-    # print(_parse_server_line(string))
-    # print(_parse_server_line(str2))
-    # ups = Upstreams('../test')
-    # print(ups.get_upstream_conf())
-    import json
-    #
-    # print(json.dumps(
-    # ups.get_upstreams(), indent=4
-    # ))
-    # us_ggpt = ups.get_upstream('ggpt')
-    # print(us_ggpt.lb_algorithm)
-    # print(json.dumps(
-    # us_ggpt.servers, indent=4
-    # ))
-    # print(json.dumps(
-    #     us_ggpt.del_server('10.201.10.224'), indent=4
-    # ))
-
-    # print(json.dumps(
-    #     us_ggpt.add_server('10.201.10.100', 8080, 10, 15), indent=4
-    # ))
-
-    # us_ggpt.add_server('10.201.10.199', 8080, 10, 15)
-    # ups.update_upstream(us_ggpt)
-    #
-    # print(
-    #     ups.dump_upstreams()
-    # )
-    # print(ups.dump_upstreams())
-    # print(ups.del_upstream('ggpt', 'pm', 'passport', 'nongxin', 'imapi', 'cas', 'fuck'))
-    # print(len(ups.get_upstreams()))
+    usgrp = UpstreamGroup("../test/conf/nginx.conf")
+    fuck = usgrp.get_upstream('fuck')
+    fuck.add_server('111.111.111.1', '888' '1', '15s')
+    usgrp.update_upstream_group(fuck)
+    print(usgrp.dump_upstreams())
