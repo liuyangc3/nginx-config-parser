@@ -3,6 +3,9 @@
 
 在config.py中指定Nginx Home和upstream配置文件的位置
 
+# 依赖
+tornado simplejson ply
+
 # 获取upsteam配置
 curl 127.0.0.1:8000/
 ```
