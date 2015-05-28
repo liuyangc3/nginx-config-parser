@@ -25,7 +25,6 @@ class BaseHandler(web.RequestHandler):
     def initialize(self):
         self.ngx_home = config.ngx_home
         self.upstream_conf = config.upstream_conf
-        self.usgroup = UpstreamGroup(self.upstream_conf)
 
     def pretty_response(self, data):
         if 'pretty' in self.request.arguments:
@@ -35,11 +34,17 @@ class BaseHandler(web.RequestHandler):
 
 
 class IndexHandler(BaseHandler):
+    def initialize(self):
+        self.usgroup = UpstreamGroup(self.upstream_conf)
+
     def get(self):
         self.pretty_response(self.usgroup.group)
 
 
 class ListHandler(BaseHandler):
+    def initialize(self):
+        self.usgroup = UpstreamGroup(self.upstream_conf)
+
     def get(self):
         self.write("Name:%-25sServers:\n" % '')
         for us_name in self.usgroup.group:
@@ -47,6 +52,9 @@ class ListHandler(BaseHandler):
 
 
 class UpstreamHandler(BaseHandler):
+    def initialize(self):
+        self.usgroup = UpstreamGroup(self.upstream_conf)
+
     def check_us_name(self, us_name):
         try:
             return self.usgroup.get_upstream(us_name)
