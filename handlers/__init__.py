@@ -7,6 +7,7 @@ import os
 
 from tornado import web
 from ngx import UpstreamGroup, NotFindUpstream, NotFindServer
+import config
 
 
 def check_ipv4(value):
@@ -22,8 +23,8 @@ class BaseHandler(web.RequestHandler):
         pass
 
     def initialize(self):
-        self.ngx_home = os.path.join(os.path.dirname(__file__), "../test")
-        self.usgroup = UpstreamGroup(self.ngx_home)
+        self.upstream_conf = config.upstream_conf
+        self.usgroup = UpstreamGroup(self.upstream_conf)
 
     def pretty_response(self, data):
         if 'pretty' in self.request.arguments:

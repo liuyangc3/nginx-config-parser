@@ -46,9 +46,8 @@ class UpstreamGroup(object):
                 }
     """
 
-    def __init__(self, ngx_home):
-        self.ngx_home = ngx_home
-        self.ngx_conf = self.ngx_home + '/conf/nginx.conf'
+    def __init__(self, ngx_conf):
+        self.ngx_conf = ngx_conf
         self.group = self.get_upstream_group()
 
     def get_upstream_conf(self):
