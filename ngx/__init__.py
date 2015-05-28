@@ -26,25 +26,16 @@ def _parse_server_line(line):
         server.append(part[1][:-1])  # 除去结尾的;
         server.append('1')  # 加入 max_fails 默认值
         server.append('10s')  # 加入fail_timeout 默认值
-
     return server
 
 
-def server_to_line(server):
-    """ 根据 server 对象生成文本 """
-    return "    server %s max_fails=%s fail_timeout=%s;\n" \
-           % (server[0], server[1], server[2])
+class NotFindUpstream(Exception):
+    pass
 
+class NotFindServer(NotFindUpstream):
+    pass
 
-def check_ipv4(value):
-    parts = value.split('.')
-    if len(parts) == 4 and all(x.isdigit() for x in parts):
-        numbers = list(int(x) for x in parts)
-        return all(0 <= num < 256 for num in numbers)
-    return False
-
-
-class Upstreams(object):
+class UpstreamGroup(object):
     """
     upstreams = {
                     us_name: [ 'lb',
@@ -58,7 +49,7 @@ class Upstreams(object):
     def __init__(self, ngx_home):
         self.ngx_home = ngx_home
         self.ngx_conf = self.ngx_home + '/conf/nginx.conf'
-        self.upstreams = self.get_upstreams()
+        self.us_group = self.get_upstream_group()
 
     def get_upstream_conf(self):
         """ 取出关于 upstream 的配置文本 """
@@ -78,45 +69,44 @@ class Upstreams(object):
                 line = ngx.readline()
         return ''.join(res)
 
-    def get_upstreams(self):
+    def get_upstream_group(self):
         """返回upstreams对象"""
         # parser = new_parser()
         return parser.parse(self.get_upstream_conf())
 
     def get_upstream(self, us_name):
         """返回指定 upstream_name 的us对象"""
+        us_name = str(us_name)
         try:
             # 对象的副本传递到 Upstream
-            us_obj = deepcopy(self.upstreams[us_name])
+            us_obj = deepcopy(self.us_group[us_name])
             us = Upstream(us_name, us_obj)
             return us
         except KeyError, e:
-            print("error upstream name %s" % e)
-            return None
+            raise NotFindUpstream("Upstream %s is not in conf" % e)
 
-    def update_upstream(self, us):
+    def update_upstream_group(self, us):
         """更新或添加 upstream 对象"""
         if isinstance(us, Upstream):
             us_obj = [us.lb_algorithm]
             for server in us.servers:
                 us_obj.append(server)
-            self.get_upstreams()[us.us_name] = us_obj
-            return self.upstreams[us.us_name]
+            self.get_upstream_group()[us.us_name] = us_obj
+            return self.us_group[us.us_name]
 
     def del_upstream(self, *args):
         """删除一个或多个指定的 us对象,返回删除后的 upstreams 对象"""
         try:
             for us_name in args:
-                self.upstreams.pop(us_name)
-            return self.upstreams
-        except KeyError, e:
-            print("error upstream name %s" % e)
-            return self.upstreams
+                self.us_group.pop(us_name)
+            return self.us_group
+        except NotFindUpstream, e:
+            return self.us_group
 
     def dump_upstreams(self):
         """upstreams对象转为文本"""
         res = []
-        for us_name, us_stmt in self.upstreams.items():
+        for us_name, us_stmt in self.us_group.items():
             res.append("upstream %s {\n" % us_name)
             if us_stmt[0] != 'default':
                 res.append('    ' + us_stmt[0] + ';\n')
@@ -125,6 +115,10 @@ class Upstreams(object):
                 res.append(server_to_line(server))
             res.append('}\n')
         return ''.join(res)
+
+    def update_ngx_conf(self):
+        with open(self.ngx_conf, 'w') as f:
+            f.write(self.dump_upstreams())
 
 
 class Upstream(object):
@@ -136,25 +130,24 @@ class Upstream(object):
 
     def add_server(self, ip, port, max_fails=None, fail_timeout=None):
         """ 添加server对象,ip是字符串 参数都是数字"""
-        if check_ipv4(ip):
-            if not max_fails:
-                max_fails = 1
-            if not fail_timeout:
-                fail_timeout = 10
-            self.servers.append([
-                ip + ':' + str(port),
-                str(max_fails),
-                str(fail_timeout) + 's'
-            ])
-        return self.servers
+        if not max_fails:
+            max_fails = "1"
+        if not fail_timeout:
+            fail_timeout = "10s"
+        self.servers.append([
+            ip + ':' + port,
+            max_fails,
+            fail_timeout
+        ])
 
     def del_server(self, ip):
         """ 根据 ip 删除 server 对象 """
-        if check_ipv4(ip):
-            for index, server in enumerate(self.servers):
-                if ip in server[0]:
-                    self.servers.pop(index)
-        return self.servers
+        for index, server in enumerate(self.servers):
+            if ip in server[0]:
+                self.servers.pop(index)
+                return self.servers
+            else:
+                raise NotFindServer("\"%s\" is not in upstream \"%s\"" % (ip, self.us_name))
 
 
 if __name__ == '__main__':
