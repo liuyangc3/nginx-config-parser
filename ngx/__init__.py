@@ -28,6 +28,11 @@ def _parse_server_line(line):
         server.append('10s')  # 加入fail_timeout 默认值
     return server
 
+def server_to_line(server):
+    """ 根据 server 对象生成文本 """
+    return "    server %s max_fails=%s fail_timeout=%s;\n" \
+           % (server[0], server[1], server[2])
+
 
 class NotFindUpstream(Exception):
     pass
