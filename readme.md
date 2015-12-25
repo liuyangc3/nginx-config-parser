@@ -1,5 +1,11 @@
 # 介绍 
-提供HTTP接口用来添加/删除 Nginx 反向代理的节点
+通过 HTTP接口用来 查看/添加/删除 Nginx 反向代理的节点
+
+
+# 原理
+通过类似于 lex/yacc 的词法和语法分析，解析nginx upstream文本配置，并生成对象
+
+通过接口操作对象内的数据，并生成新的upstream文本配置。
 
 在config.py中指定Nginx Home和upstream配置文件的位置
 
