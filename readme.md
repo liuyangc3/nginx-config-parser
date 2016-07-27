@@ -27,6 +27,35 @@ http {
 run tornado on same host which Nginx runs too  
 
 # web api
+upsteam config in Nginx
+```
+upsteam test1 {
+    ip_hash,
+    server 192.168.0.1:80  max_fails=1 fail_timeout=10s;
+}
+
+upsteam test2 {
+    server 192.168.0.2:81  max_fails=1 fail_timeout=10s;
+    server 192.168.0.2:82  max_fails=1 fail_timeout=10s;
+}
+```
+
+upsteam config json format mapping
+```
+{
+    "test1" : [
+        "ip_hash",
+        ["192.168.0.1:80", "1", "10s"],
+    ],
+    
+    "test2": [
+        ["192.168.0.2:81", "1", "10s"],
+        ["192.168.0.2:82", "1", "10s"]
+    ]
+}
+```
+`upsteam name` is upsteam `name` {} in nginx config
+
 
 ## 获取upsteam配置
 curl 127.0.0.1:8000/
