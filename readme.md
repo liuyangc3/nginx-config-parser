@@ -54,7 +54,6 @@ upsteam config json format mapping
     ]
 }
 ```
-`upsteam name` is upsteam `name` {} in nginx config
 
 
 ## 获取upsteam配置
