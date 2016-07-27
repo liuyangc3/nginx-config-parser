@@ -22,11 +22,13 @@ http {
     include upstream.conf;
     ...
     }
-
 ```
 
+run tornado on same host which Nginx runs too  
 
-# 获取upsteam配置
+# web api
+
+## 获取upsteam配置
 curl 127.0.0.1:8000/
 ```
 {"ggpt": ["ip_hash", ["10.201.10.124:8080", "1", "10s"], ["10.201.10.224:8080", "1", "10s"]], 
@@ -66,7 +68,7 @@ curl 127.0.0.1:8000/?pretty
 }
 ```
 
-# 列出所有的 upstream name 以及 server的数量
+## 列出所有的 upstream name 以及 server的数量
 curl 127.0.0.1:8000/list
 ```
 Name:                         Servers:
@@ -77,7 +79,7 @@ cas                           2
 sh                            2
 ```
 
-# 查询指定 upstream 
+## 查询指定 upstream 
 curl 127.0.0.1:8000/pm?pretty
 ```
 [
@@ -94,7 +96,7 @@ curl 127.0.0.1:8000/pm?pretty
 ]
 
 ```
-# 给指定 upstream 添加server
+## 给指定 upstream 添加 server
 curl -XPOST 127.0.0.1:8000/pm?pretty -d '["10.201.10.233:3333", "111", "10s"]'
 ```
 [
@@ -117,7 +119,7 @@ curl -XPOST 127.0.0.1:8000/pm?pretty -d '["10.201.10.233:3333", "111", "10s"]'
 ```
 
 
-# 删除server
+## 删除server
 curl -XDELETE 127.0.0.1:8000/pm?pretty -d '10.201.10.233'
 ```
 [
