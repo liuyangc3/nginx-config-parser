@@ -44,4 +44,4 @@ server
 ```
 
 测试输出结果
-[]
+![](config.png)
