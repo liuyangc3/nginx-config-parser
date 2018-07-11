@@ -9,6 +9,9 @@
 
 在config.py中指定Nginx Home和upstream配置文件的位置
 
+
+lua 分支使用lpeg 实现
+
 # 依赖
 ```
 pip install tornado simplejson ply
