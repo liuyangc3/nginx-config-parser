@@ -10,7 +10,7 @@
 在config.py中指定Nginx Home和upstream配置文件的位置
 
 
-lua 分支使用lpeg 实现
+[lua 分支](https://github.com/liuyangc3/nginx_config_parser/tree/lua)使用 lpeg 实现
 
 # 依赖
 ```
