@@ -1,0 +1,31 @@
+{
+  "name": "nginx_config_parser",
+  "version": "1.0.0",
+  "description": "nginx config parser in PEG.js",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liuyangc3/nginx_config_parser.git"
+  },
+  "keywords": [
+    "parser",
+    "nginx"
+  ],
+  "author": "liuyangc3@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/liuyangc3/nginx_config_parser/issues"
+  },
+  "dependencies": {
+    "pegjs": "^0.10.0"
+  },
+  "devDependencies": {
+    "mocha": "^10.0.0"
+  }
+}
